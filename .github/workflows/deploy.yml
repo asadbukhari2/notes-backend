@@ -23,7 +23,7 @@ jobs:
           ssh -i key.pem -o StrictHostKeyChecking=no ubuntu@"${{ secrets.EC2_IP }}" << 'EOF'
             # Move to home directory
             cd ~
-
+            ll
             # Clone the repo if it doesn't exist
             # if [ ! -d "notes-backend" ]; then
             #   git clone https://github.com/YOUR_USERNAME/notes-backend.git
