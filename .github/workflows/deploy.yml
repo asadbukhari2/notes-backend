@@ -21,32 +21,21 @@ jobs:
       - name: Deploy to EC2
         run: |
           ssh -i key.pem -o StrictHostKeyChecking=no ubuntu@"${{ secrets.EC2_IP }}" << 'EOF'
-            # Go to home directory
-            cd ~
+            # Move to /home/ubuntu
+            cd /home/ubuntu
 
-            # List contents to check for notes-backend
-            ls -la
+            # Create a new directory for the project (e.g., "notes-backend")
+            mkdir -p notes-backend
 
-            # Clone the repo if the directory doesn't exist
-            if [ ! -d "notes-backend" ]; then
-              git clone https://github.com/asadbukhari2/notes-backend.git
-            fi
-
-            # Move to the notes-backend directory
+            # Change to the new directory
             cd notes-backend
 
-            # Ensure Node.js is installed
-            if ! command -v node &> /dev/null; then
-              curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-              sudo apt-get install -y nodejs
+            # Clone the repo if it doesn't exist
+            if [ ! -d ".git" ]; then
+              git clone https://github.com/asadbukhari2/notes-backend.git .
             fi
 
-            # Ensure PM2 is installed
-            if ! command -v pm2 &> /dev/null; then
-              sudo npm install -g pm2
-            fi
-
-            # Pull latest changes
+            # Pull latest changes from the main branch
             git pull origin main
 
             # Install dependencies

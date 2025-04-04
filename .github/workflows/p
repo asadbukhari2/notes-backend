@@ -1,0 +1,57 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup SSH Key
+        run: |
+          echo "${{ secrets.EC2_SSH_KEY }}" > key.pem
+          chmod 600 key.pem
+
+      - name: Deploy to EC2
+        run: |
+          ssh -i key.pem -o StrictHostKeyChecking=no ubuntu@"${{ secrets.EC2_IP }}" << 'EOF'
+            # Go to home directory
+            cd ~
+
+            # List contents to check for notes-backend
+            ls -la
+
+            # Clone the repo if the directory doesn't exist
+            if [ ! -d "notes-backend" ]; then
+              git clone https://github.com/asadbukhari2/notes-backend.git
+            fi
+
+            # Move to the notes-backend directory
+            cd notes-backend
+
+            # Ensure Node.js is installed
+            if ! command -v node &> /dev/null; then
+              curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+              sudo apt-get install -y nodejs
+            fi
+
+            # Ensure PM2 is installed
+            if ! command -v pm2 &> /dev/null; then
+              sudo npm install -g pm2
+            fi
+
+            # Pull latest changes
+            git pull origin main
+
+            # Install dependencies
+            npm install
+
+            # Restart or start the app with PM2
+            pm2 restart notes-backend || pm2 start server.js --name notes-backend
+          EOF
